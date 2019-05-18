@@ -51,7 +51,8 @@ T(1)=0.0;
 time=0.0;
 i=2;
 start_time=tic;
-
+ix=[];
+iy=[];
 %% Control loop
 while(time<tf)
     time=toc(start_time);
@@ -84,8 +85,8 @@ while(time<tf)
      
       if time > 8 && time < 12
     %% Online Trajectory planning nello spazio operativo...mi servirà inversione cinematica
-    IN_XY(1:2)=XYi(1:2);
-    IN_XY(3:4)=XYf(1:2);
+    IN_XY(1:2)=XYi_c2(1:2);
+    IN_XY(3:4)=XYf_c2(1:2);
     IN_XY(5)=8;
     IN_XY(6)=12;
     IN_XY(7)=time;
@@ -96,11 +97,15 @@ while(time<tf)
       
       
     XY = [XY_';phi_];
+    ix=[ix;XY_(1)];
+    iy=[iy;XY_(2)];
     XYdot=[XYdot_';phidot_];
     %% Online inverse kinematics
     %gestire ridondanza
     Q_dotdes=inv_man_rid(Qdes,XY,XYdot);
     Qdes=Qdes+Q_dotdes*dt;
+    
+
     %Q_dotdes=inv_man_rid(Q,XY,XYdot,a1,a2,a3);
     %Qdes=Q+Q_dotdes*dt;
     Qides=Qides+Qdes*dt;
@@ -108,16 +113,23 @@ while(time<tf)
     XY_IK=direct_kinematics_4DoF(Qdes,a1,a2,a3,a4);
     XY_err_IK=[XY_err_IK; XY_IK(1:3)'-XY(1:3)'];%errore inversione cinematica
     %% PID controller
-%     
-%     K=[0.6*160 20 0 0]; %trovo T=0.26 e Kp= 160
-%     I=[0 0 0 0];
-%     D=[2 1 0 0];%0.1*0.6*160/8
-%    
 
-     K=[90 50 20 0]; %trovo T=0.26 e Kp= 160
-     I=[0 0 0 0];
-     D=[2 1.5 0.8 0];%0.1*0.6*160/8
-    
+
+K=[1.4 0.9 0.6 0.21]; 
+D=[0.01 0.001 0.0001 0.00001];
+I=[0 0 0 0];
+
+
+% 
+% K=[900 0 0 0];
+% D=[50 0 0 0   ];
+% I=[0 0 0 0];
+% 
+
+%      K %trovo T=0.26 e Kp= 160
+%      I=[0 0 0 0];
+%      D=[0 0 0 0];%0.1*0.6*160/8
+%     
     tau= PID_controller(Q, Qdot, Qi, Qdes, Qdotdes, Qides, K, D, I);
     
     %% Robot dynamic model
@@ -170,9 +182,14 @@ hold on
 plot(T,Qdes_(:,2),'-r','Linewidth',1)
 
 figure
-plot(T,Q_(:,3),'-b','Linewidth',4)
+plot(T,Q_(:,3),'-b','Linewidth',1)
 hold on
-plot(T,Qdes_(:,3),'-r','Linewidth',4)
+plot(T,Qdes_(:,3),'-r','Linewidth',1)
+
+figure
+plot(T,Q_(:,4),'-b','Linewidth',1)
+hold on
+plot(T,Qdes_(:,4),'-r','Linewidth',1)
 
 
 figure
@@ -181,8 +198,11 @@ plot(T,rad2deg(Q_(:,1)-Qdes_(:,1)),'-b','Linewidth',1)
 figure
 plot(T,rad2deg(Q_(:,2)-Qdes_(:,2)),'-b','Linewidth',1)
 
-figure
-plot(T,rad2deg(Q_(:,3)-Qdes_(:,3)),'-b','Linewidth',1)
+% figure
+% plot(T,rad2deg(Q_(:,3)-Qdes_(:,3)),'-b','Linewidth',1)
+% 
+% figure
+% plot(T,rad2deg(Q_(:,4)-Qdes_(:,4)),'-b','Linewidth',1)
 % subplot(4,1,3)
 % plot(T,Q_(:,3),'-b','Linewidth',4)
 % hold on
@@ -205,7 +225,7 @@ plot(T,rad2deg(Q_(:,3)-Qdes_(:,3)),'-b','Linewidth',1)
 % plot(T,XY_err_IK(:,3),'-b','Linewidth',4)
 
 
-
+% 
 
 MAKE_VIDEO = 1;
 if(MAKE_VIDEO)

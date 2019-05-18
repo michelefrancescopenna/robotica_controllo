@@ -48,7 +48,7 @@ ms_4=0.9*0.038;
 M_1=ml_1+ms_2;
 M_2=ml_2+ms_3;
 M_3=ml_3+ms_4;
-M_4=ml_4+10;
+M_4=ml_4;
 
 
 %Masse rotori [kg] 10% del totale
